@@ -37,6 +37,20 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className="py-16 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl overflow-hidden shadow-2xl relative border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800" style={{ paddingBottom: '56.25%' }}>
+            <iframe 
+              src="https://player.vimeo.com/video/846819979?title=0&byline=0&portrait=0" 
+              className="absolute top-0 left-0 w-full h-full"
+              allow="autoplay; fullscreen; picture-in-picture" 
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-24 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
