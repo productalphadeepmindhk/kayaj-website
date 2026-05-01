@@ -168,7 +168,7 @@ export default function Home() {
             </div>
             
             <div className="glass-card p-8 rounded-3xl border-2 border-primary/20 bg-primary-light/30 flex flex-col justify-center text-center">
-              <h3 className="text-2xl font-bold mb-2 text-foreground">分開購買 > HKD 1,050</h3>
+              <h3 className="text-2xl font-bold mb-2 text-foreground">分開購買 &gt; HKD 1,050</h3>
               <p className="text-lg font-medium text-slate-600 dark:text-slate-400 line-through mb-4">缺乏協同效應</p>
               <h3 className="text-3xl font-black text-primary">NAD+ 一瓶全包</h3>
               <p className="text-sm font-bold text-slate-500 mt-2">科學配比 • 效果加乘</p>
