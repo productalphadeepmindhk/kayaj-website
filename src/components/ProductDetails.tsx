@@ -17,7 +17,7 @@ export default function ProductDetails({ product }: { product: Product }) {
   const parseDescription = (text: string) => {
     const lines = text.split('\n');
     const sections: { title: string; content: string[] }[] = [];
-    let currentTitle = "Features and Benefits";
+    let currentTitle = "產品特點";
     let currentContent: string[] = [];
 
     const isHeader = (line: string) => {
@@ -52,11 +52,11 @@ export default function ProductDetails({ product }: { product: Product }) {
     
     // Ensure the 5 default sections are present if they were not in the text, to match the layout image.
     const defaultHeaders = [
-      "Features and Benefits", "Suitable User", "Active Ingredients Per Capsule", "Dosage/Direction", "Storage"
+      "產品特點", "適合人士", "主要成分", "建議用量", "儲存方法"
     ];
     
-    // If we only found one section (the default), and it's Features and Benefits, we can append empty ones
-    if (sections.length === 1 && sections[0].title === "Features and Benefits") {
+    // If we only found one section (the default), and it's 產品特點, we can append empty ones
+    if (sections.length === 1 && sections[0].title === "產品特點") {
         defaultHeaders.slice(1).forEach(header => {
             sections.push({ title: header, content: [] });
         });

@@ -27,6 +27,49 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
     is_core_product: false,
   });
   
+  const [sections, setSections] = useState(() => {
+    const desc = initialData?.description_zh || "";
+    const result = {
+      features: "",
+      suitable: "",
+      ingredients: "",
+      dosage: "",
+      storage: ""
+    };
+    
+    const lines = desc.split('\n');
+    let currentKey = "features";
+    let content: string[] = [];
+    
+    const isHeader = (line: string) => {
+      const trimmed = line.trim().toLowerCase().replace(/[:：]$/, '');
+      if (["features and benefits", "features & benefits", "產品特點"].includes(trimmed)) return "features";
+      if (["suitable user", "suitable for", "適合人士"].includes(trimmed)) return "suitable";
+      if (["active ingredients per capsule", "active ingredients", "主要成分"].includes(trimmed)) return "ingredients";
+      if (["dosage/direction", "dosage / direction", "dosage", "direction", "建議用量"].includes(trimmed)) return "dosage";
+      if (["storage", "儲存方法"].includes(trimmed)) return "storage";
+      return null;
+    };
+
+    lines.forEach(line => {
+      const headerKey = isHeader(line);
+      if (headerKey) {
+        if (content.length > 0) {
+          result[currentKey as keyof typeof result] = content.join('\n').trim();
+        }
+        currentKey = headerKey;
+        content = [];
+      } else {
+        content.push(line);
+      }
+    });
+    if (content.length > 0) {
+      result[currentKey as keyof typeof result] = content.join('\n').trim();
+    }
+    
+    return result;
+  });
+  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url || "");
   const [loading, setLoading] = useState(false);
@@ -72,9 +115,11 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
         finalImageUrl = await uploadImage();
       }
 
+      const combinedDescription = `產品特點：\n${sections.features.trim()}\n\n適合人士：\n${sections.suitable.trim()}\n\n主要成分：\n${sections.ingredients.trim()}\n\n建議用量：\n${sections.dosage.trim()}\n\n儲存方法：\n${sections.storage.trim()}`;
+
       const productData = {
         name_en: formData.name_en,
-        description_zh: formData.description_zh,
+        description_zh: combinedDescription,
         price: formData.price === "" ? null : Number(formData.price),
         image_url: finalImageUrl,
         is_core_product: formData.is_core_product,
@@ -143,15 +188,58 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">中文描述 (必填)</label>
-                <textarea
-                  required
-                  rows={6}
-                  value={formData.description_zh}
-                  onChange={(e) => setFormData({...formData, description_zh: e.target.value})}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-                ></textarea>
+              <div className="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-6 mt-6">
+                <h3 className="font-bold text-lg mb-4">產品詳細資訊</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">產品特點 (Features and Benefits)</label>
+                  <textarea
+                    rows={3}
+                    value={sections.features}
+                    onChange={(e) => setSections({...sections, features: e.target.value})}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  ></textarea>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">適合人士 (Suitable User)</label>
+                  <textarea
+                    rows={3}
+                    value={sections.suitable}
+                    onChange={(e) => setSections({...sections, suitable: e.target.value})}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">主要成分 (Active Ingredients)</label>
+                  <textarea
+                    rows={3}
+                    value={sections.ingredients}
+                    onChange={(e) => setSections({...sections, ingredients: e.target.value})}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">建議用量 (Dosage/Direction)</label>
+                  <textarea
+                    rows={3}
+                    value={sections.dosage}
+                    onChange={(e) => setSections({...sections, dosage: e.target.value})}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">儲存方法 (Storage)</label>
+                  <textarea
+                    rows={3}
+                    value={sections.storage}
+                    onChange={(e) => setSections({...sections, storage: e.target.value})}
+                    className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  ></textarea>
+                </div>
               </div>
               
               <div className="flex items-center">
