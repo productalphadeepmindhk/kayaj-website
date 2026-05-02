@@ -74,6 +74,24 @@ export default function ProductDetails({ product }: { product: Product }) {
     return sections;
   };
 
+  const parseIngredientLine = (line: string) => {
+    // Try to find the amount at the end of the line
+    const match = line.match(/^(.*?)([\d.,]+\s*(?:mg|g|mcg|µg|IU|ml|%)\s*)$/i);
+    if (match) {
+      // Remove any trailing hyphens or colons from the name part
+      return { name: match[1].replace(/[：:-\s]+$/, '').trim(), amount: match[2].trim() };
+    }
+    
+    // Try looking for a colon or dash
+    const splitMatch = line.match(/^(.*?)[：:-]\s*(.*)$/);
+    if (splitMatch) {
+      return { name: splitMatch[1].trim(), amount: splitMatch[2].trim() };
+    }
+    
+    // If no clear separation, just return the whole line
+    return { name: line.trim(), amount: "" };
+  };
+
   const descriptionSections = parseDescription(product.description_zh || "");
 
   return (
@@ -143,9 +161,31 @@ export default function ProductDetails({ product }: { product: Product }) {
                     </summary>
                     <div className="mt-4 text-slate-600 dark:text-slate-300 prose prose-slate dark:prose-invert max-w-none text-[15px] leading-relaxed">
                       {section.content.length > 0 ? (
-                        section.content.map((line, lineIdx) => (
-                          <p key={lineIdx} className="mb-1">{line}</p>
-                        ))
+                        section.title === "主要成分" ? (
+                          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 mt-3 shadow-sm">
+                            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-sm m-0">
+                              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-800/40">
+                                {section.content.map((line, lineIdx) => {
+                                  const { name, amount } = parseIngredientLine(line);
+                                  return (
+                                    <tr key={lineIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors">
+                                      <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300 w-full border-none">
+                                        {name}
+                                      </td>
+                                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-right whitespace-nowrap font-medium border-none">
+                                        {amount}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          section.content.map((line, lineIdx) => (
+                            <p key={lineIdx} className="mb-1">{line}</p>
+                          ))
+                        )
                       ) : (
                         <p className="italic text-slate-400">目前沒有提供相關資訊 / Information not available yet.</p>
                       )}
