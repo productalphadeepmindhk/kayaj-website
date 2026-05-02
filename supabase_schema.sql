@@ -5,6 +5,8 @@ CREATE TABLE public.products (
   description_zh text NOT NULL,
   price numeric,
   image_url text,
+  image_url_2 text,
+  image_url_3 text,
   is_core_product boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -33,3 +35,7 @@ CREATE POLICY "Admins can delete products."
 
 -- Note: For Image Storage, please go to the "Storage" section in your Supabase dashboard
 -- and create a new bucket named "product-images" and make it public.
+
+-- To update an existing database, run:
+-- ALTER TABLE public.products ADD COLUMN image_url_2 text;
+-- ALTER TABLE public.products ADD COLUMN image_url_3 text;

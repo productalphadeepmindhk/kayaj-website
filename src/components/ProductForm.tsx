@@ -12,6 +12,8 @@ interface Product {
   description_zh: string;
   price: number | "";
   image_url: string;
+  image_url_2?: string;
+  image_url_3?: string;
   is_core_product: boolean;
 }
 
@@ -24,6 +26,8 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
     description_zh: "",
     price: "",
     image_url: "",
+    image_url_2: "",
+    image_url_3: "",
     is_core_product: false,
   });
   
@@ -70,28 +74,22 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
     return result;
   });
   
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url || "");
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([null, null, null]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([
+    initialData?.image_url || "",
+    initialData?.image_url_2 || "",
+    initialData?.image_url_3 || ""
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const uploadImage = async () => {
-    if (!imageFile) return formData.image_url;
-    
-    const fileExt = imageFile.name.split('.').pop();
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(fileName, imageFile);
+      .upload(fileName, file);
 
     if (uploadError) {
       throw new Error(`上傳圖片失敗: ${uploadError.message}`);
@@ -110,9 +108,12 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
     setError(null);
 
     try {
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        finalImageUrl = await uploadImage();
+      const finalImageUrls = [...imagePreviews];
+      
+      for (let i = 0; i < 3; i++) {
+        if (imageFiles[i]) {
+          finalImageUrls[i] = await uploadImage(imageFiles[i]!);
+        }
       }
 
       const combinedDescription = `產品特點：\n${sections.features.trim()}\n\n適合人士：\n${sections.suitable.trim()}\n\n主要成分：\n${sections.ingredients.trim()}\n\n建議用量：\n${sections.dosage.trim()}\n\n儲存方法：\n${sections.storage.trim()}`;
@@ -121,7 +122,9 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
         name_en: formData.name_en,
         description_zh: combinedDescription,
         price: formData.price === "" ? null : Number(formData.price),
-        image_url: finalImageUrl,
+        image_url: finalImageUrls[0] || "",
+        image_url_2: finalImageUrls[1] || "",
+        image_url_3: finalImageUrls[2] || "",
         is_core_product: formData.is_core_product,
       };
 
@@ -257,32 +260,67 @@ export default function ProductForm({ initialData }: { initialData?: Product }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">產品圖片</label>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center">
-                {imagePreview ? (
-                  <div className="relative aspect-square w-full mb-4 rounded-lg overflow-hidden">
-                    <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
+              <label className="block text-sm font-medium mb-2">產品圖片 (最多 3 張)</label>
+              <div className="space-y-4">
+                {[0, 1, 2].map(index => (
+                  <div key={index} className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                    {imagePreviews[index] ? (
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src={imagePreviews[index]} alt={`Preview ${index + 1}`} className="object-cover w-full h-full" />
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 rounded-lg bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center text-slate-500 flex-shrink-0">
+                        <ImageIcon size={24} className="mb-1 opacity-50" />
+                        <span className="text-xs">圖片 {index + 1}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 w-full flex flex-col sm:flex-row justify-between items-center gap-2">
+                      <input
+                        type="file"
+                        id={`image_upload_${index}`}
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            const newFiles = [...imageFiles];
+                            newFiles[index] = file;
+                            setImageFiles(newFiles);
+                            
+                            const newPreviews = [...imagePreviews];
+                            newPreviews[index] = URL.createObjectURL(file);
+                            setImagePreviews(newPreviews);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor={`image_upload_${index}`}
+                        className="cursor-pointer inline-flex items-center px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors text-sm w-full sm:w-auto justify-center"
+                      >
+                        {imagePreviews[index] ? "更換圖片" : "選擇圖片"}
+                      </label>
+                      
+                      {imagePreviews[index] && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newFiles = [...imageFiles];
+                            newFiles[index] = null;
+                            setImageFiles(newFiles);
+                            
+                            const newPreviews = [...imagePreviews];
+                            newPreviews[index] = "";
+                            setImagePreviews(newPreviews);
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm px-2 py-2"
+                        >
+                          移除
+                        </button>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="aspect-square w-full mb-4 rounded-lg bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center text-slate-500">
-                    <ImageIcon size={48} className="mb-2 opacity-50" />
-                    <p>尚未選擇圖片</p>
-                  </div>
-                )}
-                
-                <input
-                  type="file"
-                  id="image_upload"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="image_upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
-                >
-                  選擇圖片
-                </label>
+                ))}
               </div>
             </div>
           </div>

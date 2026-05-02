@@ -1,8 +1,20 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Zap, Activity, ChevronDown, CheckCircle2, AlertTriangle, Droplets, HeartPulse, BrainCircuit, Leaf } from "lucide-react";
+import FacebookButton from "@/components/FacebookButton";
+import { supabase } from "@/lib/supabase";
 
-export default function Home() {
+export const revalidate = 60;
+
+export default async function Home() {
   const fbLink = "https://www.facebook.com/hk.observatory/?locale=zh_HK";
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .order("is_core_product", { ascending: false });
+    
+  const coreProduct = products?.find(p => p.is_core_product) || products?.[0];
+  const otherProducts = products?.filter(p => p.id !== coreProduct?.id).slice(0, 3) || [];
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -25,7 +37,7 @@ export default function Home() {
             </div>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8">
-              NAD+ Super Boost <br className="hidden md:block"/>
+              NAD+ Super Boost <br />
               <span className="gradient-text">細胞抗衰的智慧升級方案</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 leading-relaxed font-medium">
@@ -33,18 +45,16 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a 
-                href={fbLink}
-                target="_blank" rel="noopener noreferrer"
+              <FacebookButton 
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-primary text-white font-bold text-lg hover:bg-primary-dark transition-all transform hover:scale-105 shadow-xl shadow-primary/30 flex items-center justify-center"
               >
                 立即前往專頁訂購 <ArrowRight className="ml-2" size={20} />
-              </a>
+              </FacebookButton>
             </div>
           </div>
 
           {/* Video Section embedded in Hero */}
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-5xl mx-auto mb-16">
             <div className="rounded-3xl overflow-hidden shadow-2xl relative border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800" style={{ paddingBottom: '56.25%' }}>
               <iframe 
                 src="https://player.vimeo.com/video/846819979?title=0&byline=0&portrait=0" 
@@ -54,6 +64,65 @@ export default function Home() {
               ></iframe>
             </div>
           </div>
+
+          {/* Product Photos Section */}
+          {coreProduct && (
+            <div className="max-w-5xl mx-auto pt-8 border-t border-slate-200/60 dark:border-slate-800/60">
+              <h3 className="text-2xl font-bold text-center mb-8 text-slate-800 dark:text-slate-200">KAYAJ 產品系列</h3>
+              <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center justify-center">
+                
+                {/* Core Product */}
+                <div className="w-full md:w-[55%]">
+                  <Link href={`/products/${coreProduct.id}`} className="group block w-full relative">
+                    <div className="aspect-[4/3] md:aspect-square bg-white dark:bg-slate-900/50 rounded-3xl overflow-hidden shadow-xl shadow-primary/5 border border-primary/10 relative p-8 md:p-12 transition-all duration-300 group-hover:shadow-2xl group-hover:-translate-y-1">
+                      {coreProduct.image_url ? (
+                        <img src={coreProduct.image_url} alt={coreProduct.name_en} className="w-full h-full object-contain drop-shadow-xl transition-transform duration-500 group-hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                          <span className="text-slate-400 font-bold text-xl mb-2">{coreProduct.name_en}</span>
+                          <span className="text-slate-400/60 text-sm">圖片準備中</span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4 md:top-6 md:left-6 bg-gradient-to-r from-primary to-accent text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
+                        核心推薦
+                      </div>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 via-white/70 to-transparent dark:from-slate-950/90 dark:via-slate-950/70 p-6 pt-16 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-foreground">{coreProduct.name_en}</span>
+                          <span className="text-primary font-semibold flex items-center text-sm">了解更多 <ArrowRight size={16} className="ml-1" /></span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* Other Products */}
+                {otherProducts.length > 0 && (
+                  <div className="w-full md:w-[45%] flex flex-col gap-4">
+                    {otherProducts.map(product => (
+                      <Link key={product.id} href={`/products/${product.id}`} className="group block bg-white dark:bg-slate-900/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-800 p-3 transition-all duration-300 hover:-translate-y-0.5">
+                        <div className="flex items-center h-24">
+                          <div className="w-24 h-full bg-slate-50 dark:bg-slate-800/80 rounded-xl overflow-hidden p-2 flex-shrink-0">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={product.name_en} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">無圖片</div>
+                            )}
+                          </div>
+                          <div className="ml-4 flex-1">
+                            <h4 className="font-semibold text-sm md:text-base text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-2">{product.name_en}</h4>
+                            <span className="text-xs text-primary/80 mt-1 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">查看詳情 <ArrowRight size={12} className="ml-1" /></span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       </section>
 
@@ -240,13 +309,11 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <a 
-              href={fbLink}
-              target="_blank" rel="noopener noreferrer"
+            <FacebookButton 
               className="w-full sm:w-auto px-10 py-5 rounded-full bg-white text-primary font-bold text-xl hover:bg-slate-100 transition-all transform hover:scale-105 shadow-2xl flex items-center justify-center"
             >
               前往 Facebook 專頁訂購 <ArrowRight className="ml-2" size={24} />
-            </a>
+            </FacebookButton>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-white/90 font-medium">

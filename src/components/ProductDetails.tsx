@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, ShieldCheck, Star, ChevronDown } from "lucide-react";
+import FacebookButton from "@/components/FacebookButton";
 
 interface Product {
   id: string;
@@ -7,12 +11,17 @@ interface Product {
   description_zh: string;
   price: number | null;
   image_url: string | null;
+  image_url_2?: string | null;
+  image_url_3?: string | null;
   is_core_product: boolean;
 }
 
 export default function ProductDetails({ product }: { product: Product }) {
   const fbLink = "https://www.facebook.com/hk.observatory/?locale=zh_HK";
-  const hasImage = product.image_url && product.image_url.trim() !== "";
+  
+  const allImages = [product.image_url, product.image_url_2, product.image_url_3].filter(Boolean) as string[];
+  const [selectedImage, setSelectedImage] = useState<string>(allImages[0] || "");
+  const hasImage = allImages.length > 0;
 
   const parseDescription = (text: string) => {
     const lines = text.split('\n');
@@ -77,21 +86,39 @@ export default function ProductDetails({ product }: { product: Product }) {
         <div className="glass-card rounded-3xl overflow-hidden shadow-2xl border border-white/50 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-8">
             {/* Image Section */}
-            <div className="relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center h-[400px] md:h-[600px] md:sticky md:top-24 rounded-3xl overflow-hidden md:ml-4 mt-4">
-              {hasImage ? (
-                <img 
-                  src={product.image_url!} 
-                  alt={product.name_en} 
-                  className="object-contain w-full h-full p-8"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center p-12 text-center">
-                  <span className="text-white font-bold text-4xl opacity-60 drop-shadow-md">{product.name_en}</span>
-                </div>
-              )}
-              {product.is_core_product && (
-                <div className="absolute top-6 left-6 bg-accent text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center">
-                  <Star size={16} className="mr-1 fill-white" /> 核心推薦
+            <div className="flex flex-col gap-4 mt-4 md:sticky md:top-24">
+              <div className="relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-sm">
+                {hasImage ? (
+                  <img 
+                    src={selectedImage} 
+                    alt={product.name_en} 
+                    className="object-contain w-full h-full p-8 transition-opacity duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center p-12 text-center">
+                    <span className="text-white font-bold text-4xl opacity-60 drop-shadow-md">{product.name_en}</span>
+                  </div>
+                )}
+                {product.is_core_product && (
+                  <div className="absolute top-6 left-6 bg-accent text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center">
+                    <Star size={16} className="mr-1 fill-white" /> 核心推薦
+                  </div>
+                )}
+              </div>
+              
+              {/* Thumbnail Gallery */}
+              {allImages.length > 1 && (
+                <div className="flex gap-4 overflow-x-auto pb-2 px-1">
+                  {allImages.map((img, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setSelectedImage(img)}
+                      className={`relative w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === img ? 'border-primary shadow-md scale-105' : 'border-slate-200 dark:border-slate-700 hover:border-primary/50'}`}
+                    >
+                      <div className="absolute inset-0 bg-slate-50 dark:bg-slate-800"></div>
+                      <img src={img} alt={`${product.name_en} - 圖片 ${idx + 1}`} className="w-full h-full object-contain relative z-10 p-2" />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -136,14 +163,11 @@ export default function ProductDetails({ product }: { product: Product }) {
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     為確保您購買到正版 KAYAJ 產品，我們目前透過官方 Facebook 專頁為香港客戶提供專人訂購服務。
                   </p>
-                  <a 
-                    href={fbLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                  <FacebookButton 
                     className="w-full inline-flex items-center justify-center px-6 py-4 rounded-xl bg-primary text-white font-semibold hover:bg-primary-dark transition-all transform hover:scale-[1.02] shadow-lg shadow-primary/20"
                   >
                     <ShoppingBag size={20} className="mr-2" /> 前往 Facebook 專頁訂購
-                  </a>
+                  </FacebookButton>
                 </div>
               </div>
             </div>
