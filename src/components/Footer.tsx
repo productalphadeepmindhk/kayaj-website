@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FacebookButton from "@/components/FacebookButton";
 
 export default function Footer() {
   return (
@@ -30,9 +31,9 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">聯絡我們</h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <a href="https://www.facebook.com/hk.observatory/?locale=zh_HK" target="_blank" rel="noopener noreferrer" className="text-sm text-slate-500 hover:text-primary transition-colors">
+                <FacebookButton className="text-sm text-slate-500 hover:text-primary transition-colors">
                   Facebook 專頁
-                </a>
+                </FacebookButton>
               </li>
             </ul>
           </div>
